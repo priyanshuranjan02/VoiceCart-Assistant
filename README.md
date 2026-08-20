@@ -714,7 +714,7 @@ The application does **not** claim to provide live marketplace pricing or invent
 
 ### Live Application
 
-`https://<YOUR_DEPLOYED_URL>`
+`https://voicecart-assistant.vercel.app/`
 
 ### GitHub Repository
 
