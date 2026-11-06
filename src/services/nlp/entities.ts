@@ -169,7 +169,7 @@ export function extractEntities(text: string): ExtractedEntities {
 
   // If no canonical concept found, attempt extracting product noun phrase
   if (!product) {
-    const stripped = normalized
+    let stripped = normalized
       .replace(
         /\b(add|put|buy|remove|delete|take off|find|search|show me|look for|jodo|hatao|khojo|lao|kar do|chahiye|need|want)\b/gi,
         "",
@@ -183,8 +183,15 @@ export function extractEntities(text: string): ExtractedEntities {
         "",
       )
       .replace(/\b(under|below|less than|organic|जैविक)\s*(?:₹|rs\.?|inr)?\s*\d*/gi, "")
-      .replace(/\b(to my list|from my list|on my list|please|karo|do|mera|meri|mujhe)\b/gi, "")
-      .trim();
+      .replace(/\b(to my list|from my list|on my list|please|karo|do|mera|meri|mujhe)\b/gi, "");
+
+    // Strip known brand names so a brand query is not mistaken for a product noun
+    for (const b of KNOWN_BRANDS) {
+      const esc = b.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      stripped = stripped.replace(new RegExp(`\\b${esc}\\b`, "gi"), "");
+    }
+
+    stripped = stripped.trim();
 
     if (stripped.length > 1) {
       product = stripped.replace(/^\w/, (c) => c.toUpperCase());

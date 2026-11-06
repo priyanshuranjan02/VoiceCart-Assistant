@@ -45,12 +45,51 @@ describe("Product Search Engine", () => {
     ).toBe(true);
   });
 
+  it("handles brand and price query without explicit product noun 'Find NatureFresh under 200'", () => {
+    const results = ProductSearchEngine.search(PRODUCTS, {
+      query: "Find NatureFresh under 200",
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every((p) => p.brand === "NatureFresh" && p.price <= 200)).toBe(true);
+  });
+
+  it("handles brand and price ceiling query 'Amul under 100'", () => {
+    const results = ProductSearchEngine.search(PRODUCTS, {
+      query: "Amul under 100",
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every((p) => p.brand === "Amul" && p.price <= 100)).toBe(true);
+  });
+
   it("handles combined search with size 'Find 1 kg apples under 200'", () => {
     const results = ProductSearchEngine.search(PRODUCTS, {
       query: "Find 1 kg apples under 200",
     });
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((p) => p.size === "1 kg" && p.price <= 200)).toBe(true);
+  });
+
+  it("handles case-insensitive search queries", () => {
+    const results = ProductSearchEngine.search(PRODUCTS, {
+      query: "FIND AMUL MILK UNDER 100",
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].name).toBe("Milk");
+    expect(results[0].brand).toBe("Amul");
+  });
+
+  it("filters by availability constraint inStockOnly", () => {
+    const results = ProductSearchEngine.search(PRODUCTS, { inStockOnly: true });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.every((p) => p.available === true)).toBe(true);
+  });
+
+  it("returns zero results for mutually contradictory constraints", () => {
+    const results = ProductSearchEngine.search(PRODUCTS, {
+      brand: "Colgate",
+      category: "Produce",
+    });
+    expect(results.length).toBe(0);
   });
 
   it("handles no results for non-existent product", () => {

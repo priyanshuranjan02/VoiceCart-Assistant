@@ -164,9 +164,14 @@ export function VoiceSearch({ initialQuery = "" }: { initialQuery?: string }) {
         </div>
       </div>
 
-      <p className="px-1 text-xs text-muted-foreground">
-        {results.length} {t("results")}
-      </p>
+      <div className="flex flex-col gap-1 px-1 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          {results.length} {t("results")}
+        </p>
+        <p className="text-[11px] text-muted-foreground/75 italic">
+          {t("sampleCatalogDisclaimer")}
+        </p>
+      </div>
 
       <SearchResults
         results={results}

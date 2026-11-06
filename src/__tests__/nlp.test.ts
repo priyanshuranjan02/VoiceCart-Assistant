@@ -46,12 +46,43 @@ describe("NLP Command Engine", () => {
       expect(res.unit).toBe("kg");
     });
 
+    it("parses Hindi command 'पाँच सेब जोड़ो'", () => {
+      const res = parseVoiceCommand("पाँच सेब जोड़ो");
+      expect(res.intent).toBe("ADD");
+      expect(res.product).toBe("Apples");
+      expect(res.quantity).toBe(5);
+    });
+
+    it("parses Hindi command with Devanagari numerals '३ पैकेट बिस्कुट जोड़ो'", () => {
+      const res = parseVoiceCommand("३ पैकेट बिस्कुट जोड़ो");
+      expect(res.intent).toBe("ADD");
+      expect(res.product).toBe("Biscuits");
+      expect(res.quantity).toBe(3);
+      expect(res.unit).toBe("packs");
+    });
+
     it("parses Hinglish command '2 packet chips add karo'", () => {
       const res = parseVoiceCommand("2 packet chips add karo");
       expect(res.intent).toBe("ADD");
       expect(res.product).toBe("Chips");
       expect(res.quantity).toBe(2);
       expect(res.unit).toBe("packs");
+    });
+
+    it("parses Hinglish command 'Do packet bread add karo'", () => {
+      const res = parseVoiceCommand("Do packet bread add karo");
+      expect(res.intent).toBe("ADD");
+      expect(res.product).toBe("Bread");
+      expect(res.quantity).toBe(2);
+      expect(res.unit).toBe("packs");
+    });
+
+    it("handles variations with punctuation, extra whitespace and mixed casing", () => {
+      const res = parseVoiceCommand("   PLEASE ADD 3   BOTTLES OF MILK!  ");
+      expect(res.intent).toBe("ADD");
+      expect(res.product).toBe("Milk");
+      expect(res.quantity).toBe(3);
+      expect(res.unit).toBe("bottles");
     });
   });
 
@@ -74,10 +105,22 @@ describe("NLP Command Engine", () => {
       expect(res.product).toBe("Apples");
     });
 
+    it("parses 'I don't need bread anymore'", () => {
+      const res = parseVoiceCommand("I don't need bread anymore");
+      expect(res.intent).toBe("REMOVE");
+      expect(res.product).toBe("Bread");
+    });
+
     it("parses Hindi 'ब्रेड हटा दो'", () => {
       const res = parseVoiceCommand("ब्रेड हटा दो");
       expect(res.intent).toBe("REMOVE");
       expect(res.product).toBe("Bread");
+    });
+
+    it("parses Hinglish 'Milk hata do'", () => {
+      const res = parseVoiceCommand("Milk hata do");
+      expect(res.intent).toBe("REMOVE");
+      expect(res.product).toBe("Milk");
     });
   });
 
@@ -95,6 +138,13 @@ describe("NLP Command Engine", () => {
       expect(res.product).toBe("Apples");
       expect(res.quantity).toBe(5);
     });
+
+    it("parses Hindi update 'दूध 3 कर दो'", () => {
+      const res = parseVoiceCommand("दूध 3 कर दो");
+      expect(res.intent).toBe("UPDATE");
+      expect(res.product).toBe("Milk");
+      expect(res.quantity).toBe(3);
+    });
   });
 
   describe("COMPLETE Intent", () => {
@@ -106,6 +156,12 @@ describe("NLP Command Engine", () => {
 
     it("parses 'Completed apples'", () => {
       const res = parseVoiceCommand("Completed apples");
+      expect(res.intent).toBe("COMPLETE");
+      expect(res.product).toBe("Apples");
+    });
+
+    it("parses Hindi completion 'सेब हो गया'", () => {
+      const res = parseVoiceCommand("सेब हो गया");
       expect(res.intent).toBe("COMPLETE");
       expect(res.product).toBe("Apples");
     });
@@ -131,6 +187,31 @@ describe("NLP Command Engine", () => {
       expect(res.intent).toBe("SEARCH");
       expect(res.product).toBe("Toothpaste");
       expect(res.brand).toBe("Colgate");
+    });
+
+    it("disambiguates size and maxPrice in 'Find 1 kg apples under 200'", () => {
+      const res = parseVoiceCommand("Find 1 kg apples under 200");
+      expect(res.intent).toBe("SEARCH");
+      expect(res.product).toBe("Apples");
+      expect(res.size).toBe("1 kg");
+      expect(res.maxPrice).toBe(200);
+      expect(res.quantity).not.toBe(200);
+    });
+
+    it("parses multi-constraint 'Find NatureFresh organic apples under 200'", () => {
+      const res = parseVoiceCommand("Find NatureFresh organic apples under 200");
+      expect(res.intent).toBe("SEARCH");
+      expect(res.product).toBe("Apples");
+      expect(res.brand).toBe("NatureFresh");
+      expect(res.organic).toBe(true);
+      expect(res.maxPrice).toBe(200);
+    });
+
+    it("parses Hindi price ceiling search '200 se kam me seb khojo'", () => {
+      const res = parseVoiceCommand("200 se kam me seb khojo");
+      expect(res.intent).toBe("SEARCH");
+      expect(res.product).toBe("Apples");
+      expect(res.maxPrice).toBe(200);
     });
   });
 
@@ -159,6 +240,11 @@ describe("NLP Command Engine", () => {
 
     it("parses 'Empty cart'", () => {
       const res = parseVoiceCommand("Empty cart");
+      expect(res.intent).toBe("CLEAR");
+    });
+
+    it("parses Hindi 'लिस्ट खाली करो'", () => {
+      const res = parseVoiceCommand("लिस्ट खाली करो");
       expect(res.intent).toBe("CLEAR");
     });
   });

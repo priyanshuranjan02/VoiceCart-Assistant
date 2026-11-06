@@ -1,28 +1,35 @@
 # 🛒 VoiceCart — Voice-First Shopping Assistant
 
-> A multilingual, voice-first shopping assistant that lets users manage shopping lists, search products, and receive intelligent recommendations through natural language.
+> An English, Hindi and Hinglish voice-first shopping assistant built as a frontend prototype using browser speech recognition, deterministic NLP, local product data, rule-based recommendations and browser-side persistence.
 
-**VoiceCart** is a React + TypeScript application built for a Software Engineering technical assessment. It combines native browser speech recognition, deterministic multilingual NLP, a rule-based recommendation engine, multi-criteria product search, and persistent client-side state into a single mobile-first experience.
+**VoiceCart** is a React + TypeScript application built for a Software Engineering technical assessment and engineering portfolio. It combines native browser speech recognition, deterministic multilingual NLP, a rule-based recommendation engine, multi-criteria product search, and persistent client-side state into a mobile-first experience.
 
-The application is designed around one principle:
+The application is designed around one core principle:
 
 > **Speak naturally. VoiceCart understands the intent and performs the action.**
 
 ---
 
+## 🔗 Live Application & Repository
+
+- **Live Demo:** [https://voicecart-assistant.vercel.app/](https://voicecart-assistant.vercel.app/)
+- **GitHub Repository:** [https://github.com/priyanshuranjan02/VoiceCart-Assistant](https://github.com/priyanshuranjan02/VoiceCart-Assistant)
+- **Browser QA & Testing Matrix:** [docs/BROWSER-QA.md](docs/BROWSER-QA.md)
+
+---
+
 ## ✨ Highlights
 
-* 🎙️ **Real browser voice recognition** with live interim/final transcripts
-* 🧠 **Deterministic multilingual NLP** for English, Hindi, Hinglish, and Devanagari input
-* 🛒 **Voice-controlled shopping list** with add, remove, update, complete, and clear actions
-* 📦 **Automatic categorization** and quantity/unit extraction
-* 🔎 **Voice product search** with product, brand, organic, size, and price constraints
-* 💡 **Three-pillar recommendations** based on shopping habits, seasons, and product substitutes
-* 💾 **Persistent state** using versioned `localStorage`
-* 🔊 **Optional spoken confirmations** using browser Speech Synthesis
-* 📱 **Responsive, mobile-first UI** with a voice-centric interaction model
-* ✨ **Motion-based interactions** with reduced-motion support
-* 🧪 **46 automated tests** covering NLP, shopping, search, recommendations, and persistence
+- 🎙️ **Real browser voice recognition** using native Web Speech APIs with live streaming interim/final transcripts
+- 🧠 **Deterministic multilingual NLP** for English, Hindi, Hinglish, and Devanagari input
+- 🛒 **Voice-controlled shopping list** with add, remove, update, complete, and clear actions
+- 📦 **Automatic categorization** and quantity/unit extraction
+- 🔎 **Multi-constraint voice product search** filtering simultaneously by product name, brand, organic flag, size, and price ceiling
+- 💡 **Three-pillar recommendations** based on verified past purchase intervals, dynamic seasonal calendar matching, and product substitutes
+- 💾 **Persistent state** using versioned `localStorage` with in-memory fallback
+- 🔊 **Spoken confirmations** using browser Speech Synthesis
+- 📱 **Responsive, mobile-first UI** preserving modern glassmorphism and Motion interactions
+- 🧪 **109 automated tests** covering speech recognition exactly-once finalization, abort invalidation, lifecycle, NLP, shopping, multi-constraint search, recommendations, and persistence
 
 ---
 
@@ -30,611 +37,268 @@ The application is designed around one principle:
 
 ## 🎙️ 1. Real Browser Voice Recognition
 
-VoiceCart uses the browser's native Speech Recognition APIs instead of a simulated voice pipeline.
+VoiceCart connects directly to native browser speech engines rather than using a mock speech pipeline.
 
-Supported APIs:
+### Supported APIs:
 
-* `SpeechRecognition`
-* `webkitSpeechRecognition`
-
-The voice lifecycle is:
+- `SpeechRecognition`
+- `webkitSpeechRecognition`
 
 ```text
-Idle
-  ↓
-Listening
-  ↓
-Live Transcript
-  ↓
-Processing
-  ↓
-Intent + Entity Extraction
-  ↓
-Action
-  ↓
-Confirmation
+Idle → Listening → Live Interim Transcript → Final Result → Intent & Entity Parser → Domain Action → Audio & Toast Confirmation
 ```
 
-The interface provides:
+The voice pipeline delivers:
 
-* real-time interim transcripts
-* final transcript handling
-* animated listening state
-* microphone permission handling
-* timeout/no-speech handling
-* unsupported-browser detection
-* manual fallback when speech recognition is unavailable
+- Real-time streaming interim transcripts
+- Single-delivery final transcript guarantees preventing duplicate executions
+- Pulsing audio waveform feedback
+- Graceful silence detection (6s timeout) and max recognition duration guard (10s)
+- Typed error handling (`not-allowed`, `no-speech`, `audio-capture`, `network`, `not-supported`, `no-match`, `aborted`)
+- Direct manual text input and click fallback when speech recognition is unavailable or denied
 
 ---
 
 ## 🧠 2. Multilingual NLP Command Engine
 
-VoiceCart uses a deterministic client-side NLP engine rather than requiring a cloud LLM.
+VoiceCart employs a deterministic client-side NLP engine instead of a remote LLM API, ensuring sub-10ms processing latency, full offline capability, zero cloud operational cost, and test reproducibility.
 
 ### Supported intents
 
-| Intent      | Example                          |
-| ----------- | -------------------------------- |
-| `ADD`       | "Add 2 bottles of milk"          |
-| `REMOVE`    | "Remove bread"                   |
-| `UPDATE`    | "Make milk quantity 3"           |
-| `COMPLETE`  | "Mark apples as completed"       |
-| `SEARCH`    | "Find organic apples under ₹200" |
-| `RECOMMEND` | "What should I buy?"             |
-| `CLEAR`     | "Clear my shopping list"         |
+| Intent      | Purpose                    | English Example                  | Hindi / Hinglish Example                        |
+| :---------- | :------------------------- | :------------------------------- | :---------------------------------------------- |
+| `ADD`       | Add item & merge quantity  | "Add 2 bottles of milk"          | "दो किलो सेब जोड़ो" / "2 packet chips add karo" |
+| `REMOVE`    | Remove item by name        | "Remove bread"                   | "ब्रेड हटा दो" / "Milk hata do"                 |
+| `UPDATE`    | Update item quantity       | "Make milk quantity 3"           | "दूध 3 कर दो"                                   |
+| `COMPLETE`  | Check off item as bought   | "Mark apples as completed"       | "सेब हो गया"                                    |
+| `SEARCH`    | Search product catalog     | "Find organic apples under ₹200" | "₹200 से कम में सेब खोजो"                       |
+| `RECOMMEND` | Request suggestions        | "What should I buy?"             | "क्या खरीदना चाहिए?"                            |
+| `CLEAR`     | Clear entire shopping list | "Clear my shopping list"         | "लिस्ट खाली करो"                                |
 
-### Example natural-language commands
+### Entity Extraction
 
-```text
-Add two bottles of milk
-I need five apples
-Put bread on my list
-Remove milk
-Take apples off my list
-Change milk quantity to 3
-Find organic apples under ₹200
-What should I buy?
-```
+The NLP pipeline automatically extracts and normalizes:
 
-### Multilingual support
-
-English:
-
-```text
-Add two bottles of milk
-```
-
-Hindi:
-
-```text
-दो किलो सेब जोड़ो
-```
-
-Hinglish:
-
-```text
-Do packet bread add karo
-```
-
-The NLP layer supports:
-
-* English number words
-* Hindi/Hinglish number words
-* Devanagari numbers and number words
-* common units
-* brand extraction
-* product normalization
-* price constraint extraction
-* size extraction
-
-Examples of supported entities include:
-
-```text
-2
-two
-दो
-२
-
-kg
-g
-litre
-bottle
-packet
-pieces
-bunch
-loaf
-किलो
-लीटर
-पैकेट
-बोतल
-```
+- **Product Concept:** Maps multilingual synonyms (e.g., _milk_, _doodh_, _दूध_) to canonical products.
+- **Quantity & Units:** Numeric digits, English words (_one_, _two_, _dozen_), Hindi words (_ek_, _do_, _teen_, _aadha_, _darjan_), and Devanagari numerals (_१_, _२_, _३_, _पाँच_).
+- **Brand:** Recognizes brands like _Amul_, _Britannia_, _Colgate_, _NatureFresh_, _FreshFarm_, _Dabur_, etc.
+- **Organic Flag:** Identifies _organic_, _jaivik_, _जैविक_.
+- **Size:** Extracts package sizing (_1 kg_, _500 g_, _1 L_, _200 g_, _400 g_, _6 pcs_).
+- **Price Ceilings:** Disambiguates maximum price constraints (_under 200_, _below ₹150_, _200 se kam_) from item quantities.
 
 ---
 
-# 🛒 3. Shopping List Engine
+## 🛒 3. Shopping List Management & Categorization
 
-VoiceCart contains a dedicated shopping domain layer rather than embedding list logic inside React components.
-
-### Supported operations
-
-* Add item
-* Remove item
-* Update quantity
-* Increment/decrement quantity
-* Complete/uncomplete item
-* Clear list
-* Clear completed items
-
-### Smart deduplication
-
-Adding the same product merges quantities.
-
-Example:
-
-```text
-Milk × 1
-+
-Milk × 2
-=
-Milk × 3
-```
-
-### Automatic categorization
-
-Products are grouped into categories such as:
-
-* Dairy
-* Produce
-* Bakery
-* Snacks
-* Personal Care
-* Beverages
-* Pantry
-* Other
-
-Unknown products safely fall back to `Other`.
+- **Smart Quantity Merging:** Adding _Milk × 2_ when _Milk × 1_ is already present merges into _Milk × 3_ instead of cluttering the list with duplicate entries.
+- **Automatic Categorization:** Classifies products into 8 standard grocery departments: `Dairy`, `Produce`, `Bakery`, `Snacks`, `Personal Care`, `Beverages`, `Pantry`, and safely falls back to `Other`.
+- **Purchase History Integrity:** Adding an item to the list does _not_ record a purchase. Completing an item (checking it off as bought) consistently records a purchase event, with built-in deduplication.
 
 ---
 
-# 💡 4. Intelligent Recommendation Engine
+## 💡 4. Three-Pillar Recommendation Engine
 
-VoiceCart uses a three-pillar recommendation system.
-
-### 1. Habit / Purchase History
-
-Analyzes previous purchase intervals and elapsed time.
-
-Example:
-
-```text
-You usually buy Milk every 7 days.
-Last purchased 8 days ago.
-
-→ You may need Milk.
-```
-
-### 2. Dynamic Seasonal Recommendations
-
-Seasonal suggestions are determined from the current calendar month rather than being permanently hard-coded.
-
-Examples include:
-
-* summer produce
-* winter fruits
-* monsoon items
-
-### 3. Product Substitutes
-
-The substitution graph provides alternatives when users want another option.
-
-Examples:
-
-```text
-Milk
-├── Almond Milk
-├── Soy Milk
-└── Oat Milk
-```
-
-```text
-Bread
-└── Multigrain Bread
-```
-
-The user can view alternatives and add a substitute directly to the shopping list.
+1. **Habit / Replenishment Cadence:**
+   - **Strict Data Requirement:** Only products with $\ge 2$ verified past purchases qualify for interval calculation.
+   - Calculates actual reorder intervals ($t_2 - t_1$) and elapsed days (e.g., _"You usually buy this every 7 days · Last purchased 8 days ago"_). Never fabricates purchase habits when history is insufficient.
+2. **Dynamic Seasonal Matching:**
+   - Calculates the season dynamically from the current date (`new Date().getMonth()`) rather than static text.
+   - Prioritizes peak seasonal goods (e.g. Summer Mangoes, Winter Apples/Oranges, Monsoon harvest).
+3. **Product Substitutes:**
+   - Offers healthy or dietary alternatives for grocery staples (Milk ↔ Almond Milk ↔ Soy Milk; Bread ↔ Multigrain Bread; Colgate ↔ Herbal Toothpaste) with an interactive alternative selection dialog.
 
 ---
 
-# 🔎 5. Multi-Criteria Product Search
+## 🔎 5. Multi-Constraint Product Search
 
-VoiceCart supports voice-driven search using multiple constraints simultaneously.
-
-Supported search attributes:
-
-* product
-* brand
-* organic status
-* size
-* maximum price
-* availability
-
-Examples:
+The search engine simultaneously satisfies multiple constraints:
 
 ```text
-Find toothpaste under ₹200
-
-Find organic apples
-
-Find NatureFresh apples
-
-Find 1 kg apples under ₹200
-
-Find NatureFresh organic apples, 1 kg, under ₹200
+"Find NatureFresh organic apples under 200"
+→ brand: NatureFresh AND organic: true AND product: apples AND price <= 200
 ```
 
-A voice query is converted into structured constraints before being evaluated against the product catalog.
+Also supports:
 
-Conceptually:
-
-```json
-{
-  "product": "apples",
-  "brand": "NatureFresh",
-  "organic": true,
-  "size": "1 kg",
-  "maxPrice": 200
-}
-```
-
-Search results support direct **Add to List** actions.
+- Brand + price constraints without product nouns (e.g., _"Amul under 100"_, _"Find NatureFresh under 200"_)
+- Availability filtering (`inStockOnly: true`)
+- Case-insensitive matching and instant one-tap "Add to List"
 
 ---
 
-# 💾 6. Persistence & History
+## 💾 6. Persistence & Storage Reliability
 
-VoiceCart does not require a backend database for its core functionality.
-
-User-specific state is persisted using a versioned `localStorage` layer:
-
-```text
-voicecart_v1_state
-```
-
-Persisted information includes:
-
-* shopping list
-* completed items
-* activity history
-* purchase history
-* language preference
-
-The persistence layer also provides an in-memory fallback for restricted storage environments.
-
-Malformed stored state is handled safely instead of crashing the application.
-
----
-
-# 🔊 7. Optional Spoken Feedback
-
-VoiceCart can provide optional spoken confirmations using the browser's `SpeechSynthesis` API.
-
-Example:
-
-> "Added two bottles of Milk."
-
-This is supplementary to the visual confirmation system and does not replace the UI feedback.
-
----
-
-# ✨ 8. UI / UX
-
-VoiceCart follows a **voice-first, mobile-first** interaction model.
-
-The interface uses:
-
-* dark premium visual language
-* subtle glassmorphism
-* soft gradients
-* responsive cards
-* Motion-based micro-interactions
-* animated voice states
-* real-time transcript feedback
-* loading and error states
-* responsive navigation
-
-The microphone remains the primary interaction rather than being treated as an additional feature on a conventional shopping UI.
+- Stored in browser `localStorage` under the schema `voicecart_v1_state`.
+- Sanitizes and validates items, activity entries, and purchase history on load to prevent crashes from corrupted or partial JSON.
+- Automatic fallback to an in-memory store in restricted environments (e.g. private browsing or disabled storage).
 
 ---
 
 # 🏗️ Architecture
 
 ```text
-                         User
-                          │
-                          ▼
-                    Voice / Mic Input
-                          │
-                          ▼
-             Browser Speech Recognition
-                          │
-                          ▼
-                 Interim / Final Text
-                          │
-                          ▼
-            Deterministic NLP Engine
-            ┌────────────────────────┐
-            │ Intent Classification  │
-            │ Entity Extraction      │
-            │ Number / Unit Parsing  │
-            │ Product Normalization  │
-            └────────────┬───────────┘
-                         │
-                         ▼
-                  Command Dispatcher
-                         │
-        ┌────────────────┼─────────────────┐
-        ▼                ▼                 ▼
- Shopping Engine    Search Engine    Recommendation Engine
-        │                │                 │
-        ▼                ▼                 ▼
-    List State       Product Data       History/Season/
-        │                │               Substitutes
-        └────────────────┼─────────────────┘
-                         ▼
-                  Application State
-                         │
-                         ▼
-                  Persistence Layer
-                         │
-                         ▼
-                    React UI
-                         │
-             ┌───────────┴──────────┐
-             ▼                      ▼
-         Visual Feedback      Optional Speech
-```
-
----
-
-# 📂 Project Structure
-
-```text
 src/
-├── domain/
-│   ├── command.ts
-│   ├── product.ts
-│   ├── shopping.ts
-│   └── recommendation.ts
+├── domain/                      # Domain models & type definitions
+│   ├── command.ts               # Intent, ParsedCommand, Entity models
+│   ├── product.ts               # Product, Category, Season models
+│   ├── shopping.ts              # ListItem, Activity, PurchaseHistory models
+│   └── recommendation.ts        # Suggestion & Recommendation models
 │
-├── services/
+├── services/                    # Pure, testable business services
 │   ├── speech/
-│   │   ├── recognition.ts
-│   │   └── synthesis.ts
-│   │
+│   │   ├── recognition.ts       # Browser Web Speech recognition adapter
+│   │   └── synthesis.ts         # Browser SpeechSynthesis feedback
 │   ├── nlp/
-│   │   ├── parser.ts
-│   │   ├── entities.ts
-│   │   ├── numbers.ts
-│   │   └── normalizer.ts
-│   │
+│   │   ├── parser.ts            # Command tokenizer & intent classifier
+│   │   ├── entities.ts          # Quantity, unit, brand, size, price extractors
+│   │   ├── numbers.ts           # Multilingual (EN/HI/Devanagari) numeral parser
+│   │   └── normalizer.ts        # Product concept and Unicode normalizer
 │   ├── shopping/
-│   │   ├── listEngine.ts
-│   │   └── categorizer.ts
-│   │
+│   │   ├── listEngine.ts        # Pure shopping list operations & deduplication
+│   │   └── categorizer.ts       # Automatic category classifier
 │   ├── search/
-│   │   └── searchEngine.ts
-│   │
+│   │   └── searchEngine.ts      # Multi-criteria local search & filtering
 │   ├── recommendations/
-│   │   └── engine.ts
-│   │
+│   │   └── engine.ts            # Habit, dynamic seasonal & substitute engine
 │   └── persistence/
-│       └── storage.ts
+│       └── storage.ts           # Versioned localStorage with memory fallback
 │
-├── lib/
-│   └── voicecart/
-│       ├── store.tsx
-│       ├── useVoiceSession.ts
-│       ├── useMicAvailability.ts
-│       ├── data.ts
-│       ├── i18n.ts
-│       └── motion.ts
+├── lib/voicecart/               # Context providers & React adapters
+│   ├── store.tsx                # Central app state & persistence sync
+│   ├── useVoiceSession.ts       # Speech recognition lifecycle hook
+│   ├── useMicAvailability.ts    # Voice capability & permission hook
+│   ├── data.ts                  # Sample catalogue & defaults
+│   ├── i18n.ts                  # Localization dictionary (EN / HI)
+│   └── motion.ts                # Animation spring presets
 │
-├── components/
-│   └── voicecart/
-│       ├── VoiceCommandCenter.tsx
-│       ├── VoiceButton.tsx
-│       ├── TranscriptPanel.tsx
-│       ├── ShoppingList.tsx
-│       ├── ShoppingListItem.tsx
-│       ├── SmartSuggestions.tsx
-│       ├── RecommendationCard.tsx
-│       ├── VoiceSearch.tsx
-│       ├── SearchResults.tsx
-│       ├── ProductCard.tsx
-│       ├── RecentActivity.tsx
-│       ├── LanguageSelector.tsx
-│       ├── AddItemDialog.tsx
-│       └── AppShell.tsx
+├── components/voicecart/        # UI components
+│   ├── VoiceCommandCenter.tsx   # Microphone interaction hub & error feedback
+│   ├── VoiceButton.tsx          # Pulse/waveform animated voice button
+│   ├── TranscriptPanel.tsx      # Real-time transcript & parsed tags
+│   ├── ShoppingList.tsx         # Category-grouped grocery list
+│   ├── ShoppingListItem.tsx     # Item tile with quantity/checkoff controls
+│   ├── SmartSuggestions.tsx     # 3-pillar recommendation cards
+│   ├── RecommendationCard.tsx   # Individual suggestion tile
+│   ├── VoiceSearch.tsx          # Multi-constraint search bar & filter chips
+│   ├── SearchResults.tsx        # Search output grid & empty states
+│   ├── ProductCard.tsx          # Product card with one-tap add
+│   ├── RecentActivity.tsx       # Timestamped activity log
+│   ├── LanguageSelector.tsx     # Language toggle (EN / हिं)
+│   ├── AddItemDialog.tsx        # Manual add modal
+│   └── AppShell.tsx             # Responsive layout & navigation
 │
-└── __tests__/
-    ├── nlp.test.ts
-    ├── shopping.test.ts
-    ├── search.test.ts
-    ├── recommendation.test.ts
-    └── persistence.test.ts
+└── __tests__/                   # Automated Vitest test suites
+    ├── speech.test.ts           # Web Speech lifecycle, timeouts & error handling
+    ├── nlp.test.ts              # Multilingual NLP intent & entity tests
+    ├── shopping.test.ts         # List engine, merge & categorizer tests
+    ├── search.test.ts           # Multi-filter search tests
+    ├── recommendation.test.ts   # Habit, seasonal & substitute tests
+    └── persistence.test.ts      # Storage serialization, recovery & fallback
 ```
 
 ---
 
-# 🧪 Testing & Quality
+# 🧪 Testing & Quality Assurance
 
-The current implementation includes **46 automated tests** covering the core business logic.
+VoiceCart features **109 passing automated tests** across 6 test suites using Vitest:
 
-| Area                     |     Coverage |
-| ------------------------ | -----------: |
-| NLP / intents / entities |     23 tests |
-| Shopping engine          |      7 tests |
-| Search engine            |      6 tests |
-| Recommendation engine    |      5 tests |
-| Persistence              |      5 tests |
-| **Total**                | **46 tests** |
+| Test Suite          | File                                   |     Tests     | Coverage Scope                                                                                                                                           |
+| :------------------ | :------------------------------------- | :-----------: | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **NLP Engine**      | `src/__tests__/nlp.test.ts`            |    **35**     | English, Hindi, Hinglish, Devanagari numerals, size/price disambiguation, whitespace/casing                                                              |
+| **Speech Service**  | `src/__tests__/speech.test.ts`         |    **31**     | Exactly-once finalization, safety timer, abort immediate state cleanup, rapid restart, native InvalidStateError handling, timer scoping, honest confidence |
+| **Product Search**  | `src/__tests__/search.test.ts`         |    **13**     | Multi-constraint queries, brand + price without nouns, stock filter, case-insensitivity                                                                  |
+| **Shopping Engine** | `src/__tests__/shopping.test.ts`       |    **10**     | Add, smart merge, remove, update, completion toggle, un-done re-add, clear                                                                               |
+| **Recommendations** | `src/__tests__/recommendation.test.ts` |    **10**     | Dynamic seasons, fresh-user empty history guard, 2-purchase threshold, elapsed days, unique product IDs                                                  |
+| **Persistence**     | `src/__tests__/persistence.test.ts`    |    **10**     | Fresh user zero-history, v1 schema migration, future versions preservation, deep field type validation, language fallback                                 |
+| **Total**           |                                        | **109 tests** | **100% Passing**                                                                                                                                         |
 
-Current quality checks:
+### Quality Checks
 
-```text
-npm test   → 46/46 passing
-npm run lint → 0 errors
-npm run build → successful
+```bash
+bun run test   → 109/109 passing
+bun run lint   → 0 errors
+bun run build  → Clean production build (Client + SSR + Nitro)
 ```
 
-The implementation has also been manually verified for:
-
-* browser speech recognition
-* speech synthesis
-* English and Hindi commands
-* shopping-list operations
-* multi-filter product search
-* recommendations
-* persistence
-* responsive desktop UI
-* responsive mobile UI
+See [docs/BROWSER-QA.md](docs/BROWSER-QA.md) for the manual physical browser testing matrix.
 
 ---
 
 # 🌐 Browser Support
 
-Voice recognition depends on browser support for the Web Speech API.
+| Browser                     |          Speech Recognition           | Speech Synthesis | Manual Text / Tap Fallback | Status                  |
+| :-------------------------- | :-----------------------------------: | :--------------: | :------------------------: | :---------------------- |
+| **Google Chrome (Desktop)** | ✅ Native (`webkitSpeechRecognition`) |   ✅ Supported   |        ✅ Available        | Verified                |
+| **Microsoft Edge**          |               ✅ Native               |   ✅ Supported   |        ✅ Available        | Verified                |
+| **Safari macOS (Desktop)**  |               ✅ Native               |   ✅ Supported   |        ✅ Available        | Verified                |
+| **Safari iOS (Mobile)**     |            Supported by OS            |   ✅ Supported   |        ✅ Available        | Untested physically     |
+| **Mozilla Firefox**         |        ⚠️ Fallback with notice        |   ✅ Supported   |        ✅ Available        | Verified (honest error) |
 
-| Browser        | Speech Recognition | Speech Synthesis | Manual Input |
-| -------------- | ------------------ | ---------------- | ------------ |
-| Chrome Desktop | ✅                  | ✅                | ✅            |
-| Chrome Android | ✅                  | ✅                | ✅            |
-| Microsoft Edge | ✅                  | ✅                | ✅            |
-| Safari         | Browser-dependent  | ✅                | ✅            |
-| Firefox        | Limited / fallback | ✅                | ✅            |
+---
 
-If speech recognition is unavailable, VoiceCart provides a clear fallback instead of silently pretending that speech was recognized.
+# ⚠️ Prototype Scope & Limitations
+
+- **Sample Catalogue:** Product prices, sizes, and availability are illustrative demonstration data from a local catalogue.
+- **Deterministic Recommendations:** Recommendations are rule-based heuristics rather than a trained black-box machine learning model.
+- **Browser-Local Storage:** Data is persisted in browser `localStorage` and is not synchronized across different devices or browsers.
+- **Speech Engine Variance:** Browser speech recognition accuracy depends on microphone hardware, ambient noise, accent, and the platform's speech service.
 
 ---
 
 # 🛠️ Tech Stack
 
-### Frontend
-
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-
-### UI
-
-* shadcn/ui
-* Lucide Icons
-* Motion for React
-
-### Browser APIs
-
-* Web Speech API
-* Speech Synthesis API
-* localStorage
-
-### Testing
-
-* Vitest
-
-### Architecture
-
-* Domain-driven application services
-* Deterministic NLP
-* Client-side state management
-* Versioned persistence layer
+- **Frontend:** React 19, TypeScript, Vite 8, TanStack Start, Nitro
+- **Styling & Animation:** Tailwind CSS, Motion for React, shadcn/ui, Lucide Icons
+- **Browser APIs:** Web Speech API (`SpeechRecognition`), Speech Synthesis API, Web Storage API
+- **Testing & Tooling:** Vitest, ESLint, Prettier, Bun
 
 ---
 
-# 🚀 Getting Started
+# 🚀 Local Development Setup
 
-## Prerequisites
+### Prerequisites
 
-* Node.js `>= 18`
-* npm `>= 9`
+- [Bun](https://bun.sh/) `>= 1.1` (or Node.js `>= 18` with npm)
 
-## 1. Clone the repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/priyanshuranjan02/VoiceCart-Assistant.git
 cd VoiceCart-Assistant
 ```
 
-## 2. Install dependencies
+### 2. Install dependencies
 
 ```bash
-npm install
+bun install --frozen-lockfile
 ```
 
-## 3. Start the development server
+_(Or `npm install`)_
+
+### 3. Run development server
 
 ```bash
-npm run dev
+bun run dev
 ```
 
-Open the URL shown by Vite in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 4. Run tests
+### 4. Run automated test suite
 
 ```bash
-npm test
+bun run test
 ```
 
-## 5. Run lint
+### 5. Run linter & formatter check
 
 ```bash
-npm run lint
+bun run lint
 ```
 
-## 6. Create a production build
+### 6. Build for production
 
 ```bash
-npm run build
-```
-
----
-
-# 🎤 Example Voice Commands
-
-### Shopping List
-
-```text
-"Add two bottles of milk."
-
-"I need five apples."
-
-"Remove bread."
-
-"Make milk quantity three."
-
-"Mark apples as completed."
-```
-
-### Search
-
-```text
-"Find organic apples."
-
-"Find toothpaste under ₹200."
-
-"Find NatureFresh apples."
-
-"Find 1 kg apples under ₹200."
-```
-
-### Recommendations
-
-```text
-"What should I buy?"
-
-"What am I likely to need?"
-
-"Suggest an alternative to milk."
+bun run build
 ```
 
 ### Hindi / Hinglish

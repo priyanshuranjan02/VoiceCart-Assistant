@@ -53,6 +53,19 @@ describe("Shopping List Engine", () => {
     expect(isMerged).toBe(true);
   });
 
+  it("un-marks done status when re-adding an existing completed item", () => {
+    const { items, addedItem } = ShoppingListEngine.addItem(sampleItems, {
+      name: "Bread",
+      quantity: 1,
+      unit: "loaf",
+    });
+
+    expect(addedItem.done).toBe(false);
+    expect(addedItem.quantity).toBe(2); // 1 + 1
+    const found = items.find((i) => i.name === "Bread");
+    expect(found?.done).toBe(false);
+  });
+
   it("removes item by ID", () => {
     const { items, removedItem } = ShoppingListEngine.removeItem(sampleItems, "1");
     expect(items.length).toBe(1);
@@ -77,6 +90,17 @@ describe("Shopping List Engine", () => {
     expect(toggledItem?.done).toBe(true);
     const found = items.find((i) => i.id === "1");
     expect(found?.done).toBe(true);
+  });
+
+  it("clears only completed items when requested", () => {
+    const remaining = ShoppingListEngine.clear(sampleItems, true);
+    expect(remaining.length).toBe(1);
+    expect(remaining[0].name).toBe("Milk");
+  });
+
+  it("clears all items when requested", () => {
+    const remaining = ShoppingListEngine.clear(sampleItems, false);
+    expect(remaining.length).toBe(0);
   });
 
   it("correctly categorizes known and novel products", () => {

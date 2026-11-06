@@ -10,12 +10,12 @@ import { springs } from "@/lib/voicecart/motion";
 import type { ParsedCommand } from "@/lib/voicecart/nlp";
 import { useVoiceCart } from "@/lib/voicecart/store";
 import { useVoiceSession } from "@/lib/voicecart/useVoiceSession";
-import { useMicAvailability } from "@/lib/voicecart/useMicAvailability";
+import { useMicStatus } from "@/lib/voicecart/useMicAvailability";
 import { inferCategory } from "@/services/shopping/categorizer";
 
 export function VoiceCommandCenter({ micAvailable }: { micAvailable?: boolean }) {
-  const detectedMic = useMicAvailability();
-  const micReady = micAvailable ?? detectedMic;
+  const micStatus = useMicStatus();
+  const micReady = micAvailable ?? micStatus.isAvailable;
   const { t, addItem, removeByName, updateQuantity, items, toggleItem, clearList, logSearch } =
     useVoiceCart();
   const navigate = useNavigate();
@@ -94,9 +94,28 @@ export function VoiceCommandCenter({ micAvailable }: { micAvailable?: boolean })
     [addItem, removeByName, updateQuantity, items, toggleItem, clearList, logSearch, navigate],
   );
 
-  const { status, transcript, parsed, message, start, reset } = useVoiceSession({
+  const { status, transcript, parsed, message, errorType, start, reset } = useVoiceSession({
     onCommand: handleCommand,
   });
+
+  const getErrorMessage = useCallback(() => {
+    switch (errorType) {
+      case "not-allowed":
+        return t("errNotAllowed");
+      case "no-speech":
+        return t("errNoSpeech");
+      case "audio-capture":
+        return t("errAudioCapture");
+      case "network":
+        return t("errNetwork");
+      case "not-supported":
+        return t("errNotSupported");
+      case "no-match":
+        return t("errNoMatch");
+      default:
+        return t("notUnderstood");
+    }
+  }, [errorType, t]);
 
   const statusLabel =
     status === "listening"
@@ -106,21 +125,12 @@ export function VoiceCommandCenter({ micAvailable }: { micAvailable?: boolean })
         : status === "success"
           ? (message ?? "Done")
           : status === "error"
-            ? t("notUnderstood")
-            : t("readyToListen");
-
-  if (!micReady) {
-    return (
-      <section className="glass rounded-3xl p-6 text-center sm:p-10">
-        <VoiceButton status="idle" onClick={() => {}} label={t("micUnavailable")} disabled />
-        <h2 className="mt-6 text-lg font-semibold">{t("micUnavailable")}</h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
-          Allow microphone access in your browser settings to talk to VoiceCart. You can still add
-          items manually.
-        </p>
-      </section>
-    );
-  }
+            ? getErrorMessage()
+            : !micReady
+              ? micStatus.isDenied
+                ? t("errNotAllowed")
+                : t("micUnavailable")
+              : t("readyToListen");
 
   return (
     <motion.section
@@ -145,12 +155,12 @@ export function VoiceCommandCenter({ micAvailable }: { micAvailable?: boolean })
               "text-[10px] font-semibold tracking-[0.18em] " +
               (status === "success"
                 ? "text-success"
-                : status === "error"
+                : status === "error" || (!micReady && status === "idle")
                   ? "text-destructive"
                   : "text-muted-foreground")
             }
           >
-            {statusLabel.toUpperCase()}
+            {status === "error" ? "ERROR" : statusLabel.toUpperCase()}
           </motion.p>
         </AnimatePresence>
 
@@ -160,20 +170,42 @@ export function VoiceCommandCenter({ micAvailable }: { micAvailable?: boolean })
           <VoiceButton
             status={status}
             onClick={() => start()}
-            label={status === "listening" ? "Stop listening" : "Start voice command"}
+            label={
+              status === "listening"
+                ? "Stop listening"
+                : !micReady
+                  ? t("micUnavailable")
+                  : "Start voice command"
+            }
+            disabled={!micReady && status === "idle"}
           />
         </div>
 
+        {!micReady && status === "idle" && (
+          <p className="mt-4 max-w-sm px-4 text-xs text-muted-foreground">
+            {micStatus.isDenied ? t("errNotAllowed") : t("errNotSupported")}
+          </p>
+        )}
+
         {status === "error" && (
-          <motion.button
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={springs.ui}
-            onClick={() => start()}
-            className="mt-5 rounded-full border border-border-strong bg-glass-strong px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary"
-          >
-            {t("tryAgain")}
-          </motion.button>
+          <div role="alert" aria-live="assertive" className="mt-4 flex flex-col items-center">
+            <p className="max-w-md px-4 text-xs font-medium text-destructive sm:text-sm">
+              {getErrorMessage()}
+            </p>
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={springs.ui}
+              onClick={() => {
+                reset();
+                start();
+              }}
+              className="mt-3 rounded-full border border-border-strong bg-glass-strong px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {t("tryAgain")}
+            </motion.button>
+          </div>
         )}
 
         <TranscriptPanel status={status} transcript={transcript} parsed={parsed} />
@@ -181,12 +213,13 @@ export function VoiceCommandCenter({ micAvailable }: { micAvailable?: boolean })
         <div className="mt-6 w-full">
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            {t("trySaying")}
+            {t("trySaying")} (Demo)
           </p>
           <div className="no-scrollbar -mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
             {VOICE_EXAMPLES.map((example) => (
               <motion.button
                 key={example}
+                type="button"
                 whileTap={{ scale: 0.96 }}
                 transition={springs.snap}
                 onClick={() => {

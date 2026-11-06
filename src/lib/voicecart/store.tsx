@@ -123,17 +123,6 @@ export function VoiceCartProvider({ children }: { children: ReactNode }) {
 
       setItems(result.items);
 
-      // Record to purchase history for smart recommendations
-      const newHistoryRecord: PurchaseHistoryRecord = {
-        id: uid(),
-        productName: result.addedItem.name,
-        category: result.addedItem.category,
-        quantity,
-        unit,
-        timestamp: Date.now(),
-      };
-      setHistory((prev) => [newHistoryRecord, ...prev].slice(0, 50));
-
       const label = result.isMerged
         ? `Updated ${result.addedItem.name} to × ${result.addedItem.quantity}`
         : `Added ${result.addedItem.name} × ${quantity}`;
@@ -193,18 +182,30 @@ export function VoiceCartProvider({ children }: { children: ReactNode }) {
       setItems(newItems);
       if (toggledItem.done) {
         log("complete", `Completed ${toggledItem.name}`);
-        // Add to history
-        setHistory((prev) => [
-          {
+        // Record purchase to history on completion with duplicate prevention (5s window)
+        setHistory((prev) => {
+          const now = Date.now();
+          const recentDuplicate = prev.find(
+            (r) =>
+              r.productName.toLowerCase() === toggledItem.name.toLowerCase() &&
+              now - r.timestamp < 5000,
+          );
+          if (recentDuplicate) return prev;
+
+          const record: PurchaseHistoryRecord = {
             id: uid(),
             productName: toggledItem.name,
             category: toggledItem.category,
             quantity: toggledItem.quantity,
             unit: toggledItem.unit,
-            timestamp: Date.now(),
-          },
-          ...prev,
-        ]);
+            timestamp: now,
+          };
+          return [record, ...prev].slice(0, 50);
+        });
+        toast.success(`Completed ${toggledItem.name}`);
+      } else {
+        log("update", `Marked ${toggledItem.name} as pending`);
+        toast(`Marked ${toggledItem.name} as pending`);
       }
     },
     [log],
