@@ -52,6 +52,11 @@ export function SmartSuggestions({ loading = false }: { loading?: boolean }) {
           <SuggestionSkeleton />
           <SuggestionSkeleton />
         </div>
+      ) : suggestions.length === 0 ? (
+        <div className="glass mt-4 rounded-2xl p-6 text-center">
+          <p className="text-sm font-medium text-foreground">{t("noHabitDataTitle")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("noHabitDataSub")}</p>
+        </div>
       ) : (
         <motion.div
           variants={staggerParent(0.09)}

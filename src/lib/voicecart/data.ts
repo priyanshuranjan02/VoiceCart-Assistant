@@ -417,9 +417,13 @@ export const INITIAL_LIST: ListItem[] = [
   },
 ];
 
-export const INITIAL_PURCHASE_HISTORY: PurchaseHistoryRecord[] = [
+// Fresh user installations start with empty personal purchase history.
+export const INITIAL_PURCHASE_HISTORY: PurchaseHistoryRecord[] = [];
+
+// Sample historical records for testing and simulated recommendation demonstrations
+export const SAMPLE_PURCHASE_HISTORY: PurchaseHistoryRecord[] = [
   {
-    id: "h1",
+    id: "sample-h1",
     productName: "Milk",
     category: "Dairy",
     quantity: 2,
@@ -427,7 +431,7 @@ export const INITIAL_PURCHASE_HISTORY: PurchaseHistoryRecord[] = [
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 8, // 8 days ago
   },
   {
-    id: "h2",
+    id: "sample-h2",
     productName: "Milk",
     category: "Dairy",
     quantity: 2,
@@ -435,7 +439,7 @@ export const INITIAL_PURCHASE_HISTORY: PurchaseHistoryRecord[] = [
     timestamp: Date.now() - 1000 * 60 * 60 * 24 * 15, // 15 days ago
   },
   {
-    id: "h3",
+    id: "sample-h3",
     productName: "Bread",
     category: "Bakery",
     quantity: 1,

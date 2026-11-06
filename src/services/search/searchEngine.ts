@@ -25,6 +25,7 @@ export interface SearchCriteria {
 export class ProductSearchEngine {
   /**
    * Searches and filters products based on structured criteria and natural language.
+   * Multi-constraint filter: satisfies query, brand, organic, size, and price simultaneously.
    */
   public static search(products: Product[], criteria: SearchCriteria): Product[] {
     const q = (criteria.query ?? "").toLowerCase().trim();
@@ -38,19 +39,38 @@ export class ProductSearchEngine {
     const effectiveSize = criteria.size ?? parsed?.size;
     const targetProduct = parsed?.product?.toLowerCase();
 
-    const matches = products.filter((product) => {
-      // 1. Keyword / Name match
-      if (q) {
-        const nameMatch = product.name.toLowerCase().includes(q);
-        const brandMatch = product.brand.toLowerCase().includes(q);
-        const catMatch = product.category.toLowerCase().includes(q);
-        const aliasMatch = product.aliases?.some((a) => a.toLowerCase().includes(q));
-        const targetMatch = targetProduct
-          ? product.name.toLowerCase().includes(targetProduct) ||
-            targetProduct.includes(product.name.toLowerCase())
-          : false;
+    // Clean residual search term for keyword matching when no explicit target product concept was resolved
+    const residualTerm = q
+      .replace(
+        /\b(find|search|show me|look for|khojo|dhoondo|dikhao|browse|karo|do|please|under|below|less than|se kam|ke andar|तक|organic|जैविक)\b/gi,
+        "",
+      )
+      .replace(
+        /\b(amul|britannia|colgate|naturefresh|freshfarm|dove|dabur|lay's|parle|go|epigamia|raw pressery|sofit)\b/gi,
+        "",
+      )
+      .replace(/(?:₹|rs\.?|inr)?\s*\d+(?:\.\d+)?/gi, "")
+      .replace(/\b(kg|kilo|g|gm|gram|l|litre|liter|ml|pcs|pieces|pack|packets|bottles)\b/gi, "")
+      .trim();
 
-        if (!nameMatch && !brandMatch && !catMatch && !aliasMatch && !targetMatch) {
+    const matches = products.filter((product) => {
+      // 1. Keyword / Concept match
+      if (targetProduct) {
+        const nameMatch =
+          product.name.toLowerCase().includes(targetProduct) ||
+          targetProduct.includes(product.name.toLowerCase());
+        const aliasMatch = product.aliases?.some(
+          (a) => a.toLowerCase().includes(targetProduct) || targetProduct.includes(a.toLowerCase()),
+        );
+        if (!nameMatch && !aliasMatch) {
+          return false;
+        }
+      } else if (residualTerm.length > 1) {
+        const nameMatch = product.name.toLowerCase().includes(residualTerm);
+        const brandMatch = product.brand.toLowerCase().includes(residualTerm);
+        const catMatch = product.category.toLowerCase().includes(residualTerm);
+        const aliasMatch = product.aliases?.some((a) => a.toLowerCase().includes(residualTerm));
+        if (!nameMatch && !brandMatch && !catMatch && !aliasMatch) {
           return false;
         }
       }
@@ -79,22 +99,22 @@ export class ProductSearchEngine {
         return false;
       }
 
-      // 5. Price floor constraint
+      // 6. Price floor constraint
       if (criteria.minPrice !== undefined && product.price < criteria.minPrice) {
         return false;
       }
 
-      // 6. Organic status constraint
+      // 7. Organic status constraint
       if (effectiveOrganic === true && !product.organic) {
         return false;
       }
 
-      // 7. Stock constraint
+      // 8. Stock constraint
       if (criteria.inStockOnly && !product.available) {
         return false;
       }
 
-      // 8. Filter pill specific checks
+      // 9. Filter pill specific checks
       if (criteria.filter === "Organic" && !product.organic) {
         return false;
       }

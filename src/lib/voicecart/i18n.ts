@@ -49,6 +49,42 @@ const dict = {
   settings: { en: "Settings", hi: "सेटिंग्स" },
   micUnavailable: { en: "Microphone access is required.", hi: "माइक्रोफ़ोन की अनुमति आवश्यक है।" },
   results: { en: "results", hi: "परिणाम" },
+  errNotAllowed: {
+    en: "Microphone permission denied. Enable microphone access in browser settings.",
+    hi: "माइक्रोफ़ोन अनुमति अस्वीकृत। ब्राउज़र सेटिंग्स में माइक्रोफ़ोन चालू करें।",
+  },
+  errNoSpeech: {
+    en: "No speech detected. Please speak clearly into your microphone.",
+    hi: "कोई आवाज़ नहीं सुनाई दी। कृपया माइक्रोफ़ोन में स्पष्ट बोलें।",
+  },
+  errAudioCapture: {
+    en: "No microphone detected. Please connect an audio input device.",
+    hi: "माइक्रोफ़ोन नहीं मिला। कृपया ऑडियो इनपुट कनेक्ट करें।",
+  },
+  errNetwork: {
+    en: "Network error during speech recognition. Tap to retry.",
+    hi: "आवाज़ पहचान में नेटवर्क त्रुटि। पुनः प्रयास करें।",
+  },
+  errNotSupported: {
+    en: "Voice recognition is not supported in this browser. Please use Chrome, Edge, or Safari.",
+    hi: "इस ब्राउज़र में वॉइस पहचान समर्थित नहीं है। कृपया Chrome, Edge या Safari का उपयोग करें।",
+  },
+  errNoMatch: {
+    en: "Speech was not recognized. Please try speaking again.",
+    hi: "आवाज़ पहचानी नहीं जा सकी। कृपया पुनः बोलें।",
+  },
+  sampleCatalogDisclaimer: {
+    en: "Sample catalogue with illustrative prices and availability for demonstration.",
+    hi: "प्रदर्शन के लिए सांकेतिक मूल्यों और उपलब्धता के साथ नमूना उत्पाद सूची।",
+  },
+  noHabitDataTitle: {
+    en: "No purchase pattern yet",
+    hi: "अभी खरीदारी का कोई पैटर्न नहीं है",
+  },
+  noHabitDataSub: {
+    en: "Complete items on your list to see personalized replenishment reminders.",
+    hi: "व्यक्तिगत सुझाव देखने के लिए अपनी सूची की वस्तुएं पूर्ण करें।",
+  },
 } satisfies Record<string, Record<Language, string>>;
 
 export type TranslationKey = keyof typeof dict;
