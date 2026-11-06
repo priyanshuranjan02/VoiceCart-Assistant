@@ -300,3 +300,105 @@ bun run lint
 ```bash
 bun run build
 ```
+
+### Hindi / Hinglish
+
+```text
+"दो किलो सेब जोड़ो"
+
+"ब्रेड हटा दो"
+
+"दो packet bread add karo"
+```
+
+---
+
+# 🧠 Design Decisions
+
+## Why deterministic NLP instead of an LLM?
+
+VoiceCart intentionally uses a deterministic NLP engine for its core shopping commands.
+
+This provides:
+
+* predictable behavior
+* low latency
+* no external API dependency
+* no API-key management
+* easier testing
+* offline-capable command processing
+* easier debugging
+* reproducible results
+
+An external LLM is not required for the core application.
+
+## Why no external database?
+
+VoiceCart is intentionally database-free for this assessment.
+
+The application separates:
+
+```text
+Product Catalog
+→ local application data
+
+User State
+→ versioned localStorage
+```
+
+This keeps the application lightweight and removes unnecessary backend infrastructure while retaining persistence and recommendation history.
+
+The architecture can later be extended with a remote catalog or database without changing the core domain services.
+
+## Why a local product catalog?
+
+The product catalog is a controlled dataset used to demonstrate:
+
+* search
+* filtering
+* categorization
+* recommendations
+* substitutes
+
+The application does **not** claim to provide live marketplace pricing or inventory.
+
+---
+
+# ⚠️ Limitations
+
+* Browser speech recognition availability varies by browser and platform.
+* Voice recognition quality depends on microphone quality, language selection, pronunciation, and browser implementation.
+* The product catalog is a local/sample dataset rather than live marketplace inventory.
+* Recommendations are rule-based rather than trained machine-learning predictions.
+* User data is stored locally in the browser and is not synchronized across devices.
+
+---
+
+# 📌 Assessment Deliverables
+
+### Live Application
+
+`https://voicecart-assistant.vercel.app/`
+
+### GitHub Repository
+
+`https://github.com/priyanshuranjan02/VoiceCart-Assistant`
+
+---
+
+# 👨‍💻 Project
+
+**VoiceCart — Voice-First Shopping Assistant**
+
+Built as a Software Engineering technical assessment demonstrating:
+
+* voice interaction
+* natural-language processing
+* multilingual support
+* search
+* recommendations
+* state management
+* persistence
+* responsive UI/UX
+* automated testing
+* maintainable software architecture
