@@ -402,3 +402,17 @@ Built as a Software Engineering technical assessment demonstrating:
 * responsive UI/UX
 * automated testing
 * maintainable software architecture
+
+---
+
+<div align="center">
+
+## 👨‍💻 Developed by
+
+# Priyanshu Ranjan
+
+**Aspiring Data Analyst • Software Developer • Machine Learning Enthusiast**
+
+*"Turning public data into meaningful insights through AI, Analytics and Interactive Visualization."*
+
+</div>
